@@ -11,7 +11,8 @@
 
 (def null-uri-string "#")
 
-(defgeneric parse-uri (source))
+(defgeneric parse-uri (source)
+  (:documentation "Parse SOURCE into a URI."))
 
 (defun uri (source)
   "Parse SOURCE into a URI."
@@ -154,11 +155,9 @@
      string)))
 
 (defun common-prefix? (x y)
-  (check-type x string)
-  (check-type y string)
-  (let ((list (list x y)))
-    (declare (dynamic-extent list))
-    (gcp list :test #'char=)))
+  (cond ((emptyp x) nil)
+        ((emptyp y) nil)
+        (t (char= (aref x 0) (aref y 0)))))
 
 (defmethod uri= ((uri1 string) (uri2 string))
   (or (string= uri1 uri2)
