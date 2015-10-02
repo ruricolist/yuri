@@ -51,6 +51,7 @@
   ;; Ideally we would stack-allocate the URI if we were constructing a
   ;; new one.
   `(adt:match uri (parse-uri ,x)
+     ;; Handle (or ...) clauses.
      ,@(loop for (match . body) in body
              if (and (listp match)
                      (eql (car match) 'or))
