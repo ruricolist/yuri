@@ -36,8 +36,7 @@
 
 (defmethod fake-response-values ((self fake-response))
   (with-slots (body status-code headers final-location error) self
-    (if error
-        (funcall error)
+    (if error (funcall error)
         (values body status-code headers final-location))))
 
 (adt:defdata uri
@@ -63,8 +62,7 @@
   (fake-uri (apply #'make 'fake-response args)))
 
 (defmethod print-object :around ((self uri) stream)
-  (if *print-escape*
-      (call-next-method)
+  (if *print-escape* (call-next-method)
       (adt:match uri self
         (null-uri
          (write-string null-uri-string stream))
@@ -119,8 +117,7 @@
           path))
 
 (defun escape-puri-query (query)
-  (if (every #'latin-1? query)
-      query
+  (if (every #'latin-1? query) query
       (ppcre:regex-replace-all
        "[^&=]+" query
        (op (quri:url-encode _ :encoding :utf-8))
@@ -201,9 +198,7 @@
   "A valid uri, or nil if URI could not be parsed."
   ;; E.g. http://mailto:alex@iphonelife.com
   (let ((uri (parse-uri uri)))
-    (if (invalid-uri? uri)
-        nil
-        uri)))
+    (if (invalid-uri? uri) nil uri)))
 
 (defun merge-uris (uri base-uri)
   (match-uri uri
@@ -290,9 +285,7 @@
   (:method ((uri string))
     (handler-case
         (let ((host (nth-value 2 (quri:parse-uri uri))))
-          (if (stringp host)
-              host
-              (call-next-method)))
+          (if (stringp host) host (call-next-method)))
       (serious-condition ()
         (call-next-method)))))
 
@@ -306,8 +299,7 @@
   (match-uri uri
     ((or null-uri fake-uri invalid-uri data-uri) uri)
     ((valid-uri puri)
-     (if (eql (puri:uri-scheme puri) :https)
-         uri
+     (if (eql (puri:uri-scheme puri) :https) uri
          (let ((puri2 (puri:copy-uri puri)))
            (setf (puri:uri-scheme puri2) :https)
            (valid-uri puri2))))))
@@ -323,13 +315,10 @@
        (invalid-uri (string-strip-utm string) error))
       ((valid-uri puri)
        (let ((query (puri:uri-query puri)))
-         (if (no query)
-             uri
+         (if (no query) uri
              (valid-uri
               (let ((query2 (string-strip-utm query)))
-                (if (emptyp query2)
-                    (puri:copy-uri puri :query nil)
-                    (puri:copy-uri puri :query query2))))))))))
+                (puri:copy-uri puri :query (if (emptyp query2) nil query2))))))))))
 
 (defun canonicalize-uri (uri)
   (assure uri (strip-utm uri)))
@@ -361,7 +350,7 @@
     (_ nil)))
 
 (defun scheme-port (scheme)
-  (case scheme
+  (ecase scheme
     (:http 80)
     (:https 443)
     (:ftp 21)
@@ -466,15 +455,13 @@ To put it another way: if you merged URI2 and URI1, would URI1 be changed?"
 (defun strip-hash (uri)
   (match-uri uri
     ((valid-uri puri)
-     (if (no (puri:uri-fragment puri))
-         uri
+     (if (no (puri:uri-fragment puri)) uri
          (let ((puri2 (puri:copy-uri puri)))
            (setf (puri:uri-fragment puri2) nil)
            (valid-uri puri2))))
     ((invalid-uri string e)
      (let ((end (position #\# string)))
-       (if (no end)
-           uri
+       (if (no end) uri
            (invalid-uri (subseq string 0 end) e))))
     (_ uri)))
 
@@ -483,15 +470,11 @@ To put it another way: if you merged URI2 and URI1, would URI1 be changed?"
     (match-uri uri
       ((valid-uri puri)
        (let ((path (puri:uri-path puri)))
-         (if (null path)
-             uri
+         (if (null path) uri
              (let ((last-slash (position #\/ path :from-end t)))
-               (if (no last-slash)
-                   uri
+               (if (no last-slash) uri
                    (let ((path (subseq path 0 last-slash)))
-                     (if (emptyp path)
-                         (valid-uri (puri:merge-uris "/" puri))
-                         (valid-uri (puri:merge-uris (concat path "/") puri)))))))))
+                     (valid-uri (puri:merge-uris (concat path "/") puri))))))))
       (_ uri))))
 
 (defmethod fset:compare ((x uri) (y uri))
