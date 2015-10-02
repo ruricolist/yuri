@@ -88,19 +88,24 @@
   (valid-uri puri))
 
 (defmethod parse-uri ((quri quri:uri))
+  (parse-uri (quri->puri quri)))
+
+(defun quri->puri (quri)
   (with-accessors ((host     quri:uri-host)
                    (scheme   quri:uri-scheme)
                    (path     quri:uri-path)
                    (query    quri:uri-query)
                    (fragment quri:uri-fragment))
       quri
-    (parse-uri
-     (make 'puri:uri
-           :host host
-           :scheme scheme
-           :path path
-           :query query
-           :fragment fragment))))
+    (make 'puri:uri
+          :host host
+          :scheme scheme
+          :path path
+          :query query
+          :fragment fragment)))
+
+(defun puri->quri (puri)
+  (quri:uri (puri:render-uri puri nil)))
 
 (defsubst latin-1? (char)
   (declare (optimize speed))
