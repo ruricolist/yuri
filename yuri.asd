@@ -13,6 +13,7 @@
                #:quri
                #:fset
                #:cl-tld)
+  :in-order-to ((asdf:test-op (asdf:test-op #:yuri/test)))
   :components ((:file "package")
                (:file "yuri" :depends-on ("package"))))
 
@@ -21,7 +22,7 @@
   :author "Paul M. Rodriguez <pmr@ruricolist.com>"
   :license "MIT"
   :depends-on (#:yuri #:fiveam)
-  :pathname "test/"
+  :pathname "test"
   :perform (asdf:test-op (o c) (uiop:symbol-call :yuri.test :run-tests))
   :components ((:file "test")))
 
