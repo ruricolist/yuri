@@ -11,7 +11,7 @@
 
 (def null-uri-string "#")
 
-(deftype uri-path () '(or null string))
+(deftype uri-part () '(or null string))
 
 (defgeneric parse-uri (source)
   (:documentation "Parse SOURCE into a URI."))
@@ -476,7 +476,7 @@ To put it another way: if you merged URI2 and URI1, would URI1 be changed?"
     (match-uri uri
       ((valid-uri puri)
        (let ((path (puri:uri-path puri)))
-         (etypecase-of uri-path path
+         (etypecase-of uri-part path
            (null uri)
            (string
             (let ((last-slash (position #\/ path :from-end t)))
@@ -504,7 +504,7 @@ subdomain (if there is one)."
     (values nil nil nil)))
 
 (defun parse-path (path)
-  (etypecase-of uri-path path
+  (etypecase-of uri-part path
     (null nil)
     (string
      (let ((path (~>> path
