@@ -203,7 +203,6 @@
 
 (defun parse-valid-uri (uri)
   "A valid uri, or nil if URI could not be parsed."
-  ;; E.g. http://mailto:alex@iphonelife.com
   (let ((uri (parse-uri uri)))
     (if (invalid-uri? uri) nil uri)))
 
