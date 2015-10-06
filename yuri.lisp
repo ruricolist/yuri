@@ -11,6 +11,8 @@
 
 (def null-uri-string "#")
 
+(deftype uri-path () '(or null string))
+
 (defgeneric parse-uri (source)
   (:documentation "Parse SOURCE into a URI."))
 
@@ -113,7 +115,7 @@
     (or (<= 32 code 126)
         (<= 160 code 255))))
 
-(defun escape-puri-path (path)
+(defun escape-parsed-path (path)
   (mapcar (lambda (part)
             (if (and (stringp part)
                      (notevery #'latin-1? part))
@@ -121,7 +123,7 @@
                 part))
           path))
 
-(defun escape-puri-query (query)
+(defun escape-query (query)
   (if (every #'latin-1? query) query
       (ppcre:regex-replace-all
        "[^&=]+" query
@@ -137,11 +139,11 @@
               ((in uri "None" "/None" "#")
                null-uri)
               (t (let ((uri (puri:parse-uri uri)))
-                   (when-let (path (puri:uri-parsed-path uri))
+                   (when-let (path (parse-path (puri:uri-path uri)))
                      (setf (puri:uri-parsed-path uri)
-                           (escape-puri-path (puri:uri-parsed-path uri))
+                           (escape-parsed-path path)
                            (puri:uri-query uri)
-                           (escape-puri-query (puri:uri-query uri))))
+                           (escape-query (puri:uri-query uri))))
                    (valid-uri uri))))
       (invalid-uri-error (e)
         (invalid-uri (trim-whitespace (remove-if-not #'latin-1? uri)) e)))))
@@ -475,16 +477,18 @@ To put it another way: if you merged URI2 and URI1, would URI1 be changed?"
     (match-uri uri
       ((valid-uri puri)
        (let ((path (puri:uri-path puri)))
-         (if (null path) uri
-             (let ((last-slash (position #\/ path :from-end t)))
-               (if (no last-slash) uri
-                   (let ((path (subseq path 0 last-slash)))
-                     (valid-uri (puri:merge-uris (concat path "/") puri))))))))
+         (etypecase-of uri-path path
+           (null uri)
+           (string
+            (let ((last-slash (position #\/ path :from-end t)))
+              (if (no last-slash) uri
+                  (let ((path (subseq path 0 last-slash)))
+                    (valid-uri (puri:merge-uris (concat path "/") puri)))))))))
       (_ uri))))
 
 (defmethod fset:compare ((x uri) (y uri))
-  (let ((x (uri->string x)) (y (uri->string y)))
-    (fset:compare-lexicographically x y)))
+  (fset:compare-lexicographically (uri->string x)
+                                  (uri->string y)))
 
 (defun extract-tld (uri)
   ;; No extra consing!
@@ -499,3 +503,14 @@ subdomain (if there is one)."
           (values tld domain subdomain))
         (values tld (subseq host 0 domain-end) nil)))
     (values nil nil nil)))
+
+(defun parse-path (path)
+  (etypecase-of uri-path path
+    (null nil)
+    (string
+     (let ((path (~>> path
+                      trim-whitespace
+                      (split-sequence #\/))))
+       (if (equal (car path) "")
+           (cons :absolute (rest path))
+           (cons :relative path))))))
