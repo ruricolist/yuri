@@ -303,17 +303,14 @@
     ((valid-uri quri)
      (quri:make-uri
       :scheme (quri:uri-scheme quri)
-      :host (quri:uri-host quri)
-      :port (quri:uri-port quri)))))
+      :host   (quri:uri-host quri)
+      :port   (quri:uri-port quri)))))
 
 (defun extract-domain (string)
   (match string
     ((ppcre "^[a-z]+://([a-zA-Z](?:[a-zA-Z.-]*[a-zA-Z])?)" domain)
      domain)))
 
-;; `uri-domain' is called a lot and has to be fast. We can save a lot
-;; of time and consing if we extract the domain directly from the
-;; string when possible.
 (defgeneric uri-domain (uri)
   (:method ((uri t))
     (match-uri uri
@@ -322,6 +319,9 @@
       ((invalid-uri string)
        (extract-domain string))
       (_ nil)))
+  ;; `uri-domain' is called a lot and has to be fast. We can save a
+  ;; lot of time and consing if we extract the domain directly from
+  ;; the string when possible.
   (:method ((uri string))
     (handler-case
         (let ((host (nth-value 2 (quri:parse-uri uri))))
@@ -350,6 +350,7 @@
   (ppcre:regex-replace-all "(utm_[^&]*&?)" string ""))
 
 (defun strip-utm (uri)
+  "Remove any utm_ query parameters from URI."
   (let ((uri (parse-uri uri)))
     (match-uri uri
       ((or null-uri fake-uri data-uri) uri)
@@ -551,15 +552,13 @@ subdomain (if there is one)."
     (values nil nil nil)))
 
 (defun parse-path (path)
-  (etypecase-of uri-part path
-    (null nil)
-    (string
-     (let ((path (~>> path
-                      trim-whitespace
-                      (split-sequence #\/))))
-       (if (equal (car path) "")
-           (cons :absolute (rest path))
-           (cons :relative path))))))
+  (if (null path) nil
+      (let ((path (~>> path
+                       trim-whitespace
+                       (split-sequence #\/))))
+        (if (equal (car path) "")
+            (cons :absolute (rest path))
+            (cons :relative path)))))
 
 (defun unparse-path (path)
   (if (null path) nil
