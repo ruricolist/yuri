@@ -1,18 +1,42 @@
-YURI is a meta-library for parsing URIs. That is, it wraps other
-URI-parsing libraries in such a way that `yuri:parse-uri` can never
-result in a run-time error.
+YURI is a library for safe URI handling. It does not parse URIs; the
+parsing is done by [QURI][]. What YURI does – all it does – is wrap
+URIs in an [algebraic data type][].
 
-YURI is born of bitter experience. The URI standard is very flexible,
-but difficult as it is people never fail to produce invalid inputs.
-While writing early versions of [TBRSS][] the largest source of
-runtime errors, by several orders of magnitude, was from trying to
-parse invalid URIs with [PURI][].
+YURI is born of bitter experience. In early versions of [TBRSS][] the
+largest source of run-time errors, by an order of magnitude, was URI
+parsing. It soon became clear that writing handlers everywhere a URI
+might be parsed was the wrong approach.
 
-In soon became clear that error handlers were fundamentally the wrong
-approach. Instead of signals and handlers, YURI is built around an
-[algebraic data type][]. The API is rich enough, however, that the end
-user should not generally notice the difference.
+(At the time, I used [PURI][]. [QURI][] is much less finicky, and more
+careful about what errors it signals, but the argument still stands.)
+
+Instead, by wrapping URIs in an algebraic data type, it becomes
+possible to safely write functions that parse and access URIs of
+uncertain provenance without special precautions.
+
+(Although YURI uses an algebraic data type internally, it is not
+necessary to use pattern matching: ordinary accessors are provided.)
+
+You parse a URI using `yuri:parse-uri`:
+
+    (setq valid (yuri:parse-uri "http://example.com"))
+    => (YURI:VALID-URI #<QURI.URI.HTTP:URI-HTTP http://example.com>)
+
+    (setq invalid (yuri:parse-uri "http://example.com?á"))
+    => (YURI:INVALID-URI "http://example.com?foóbar" #<QURI.ERROR:URI-MALFORMED-STRING>)
+
+    (yuri:uri-scheme valid)
+    => :http
+
+    (yuri:uri-scheme invalid)
+    => :http
+
+    (yuri:uri->string valid)
+    => "http://example.com"
+
+    (yuri:uri->string invalid)
+    => "http://example.com?á"
 
 [TBRSS]: https://tbrss.com
 [QURI]: https://github.com/fukamachi/quri
-[algebraic data type]: https://en.wikipedia.org/wiki/Algebraic_data_type
+[algebraic data type]: https://bitbucket.org/tarballs_are_good/cl-algebraic-data-type
