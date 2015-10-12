@@ -17,12 +17,12 @@ uncertain provenance without special precautions.
 (Although YURI uses an algebraic data type internally, it is not
 necessary to use pattern matching: ordinary accessors are provided.)
 
-You parse a URI using `yuri:parse-uri`:
+You parse a URI using `yuri:uri`:
 
-    (setq valid (yuri:parse-uri "http://example.com"))
+    (setq valid (yuri:uri "http://example.com"))
     => (YURI:VALID-URI #<QURI.URI.HTTP:URI-HTTP http://example.com>)
 
-    (setq invalid (yuri:parse-uri "http://example.com?á"))
+    (setq invalid (yuri:uri "http://example.com?á"))
     => (YURI:INVALID-URI "http://example.com?foóbar" #<QURI.ERROR:URI-MALFORMED-STRING>)
 
     (yuri:uri-scheme valid)
