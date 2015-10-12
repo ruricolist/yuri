@@ -33,8 +33,8 @@
    (final-location :initarg :final-location :type (or string quri:uri)
                    :accessor final-location)
    (error :initarg :error))
-  (:documentation "A fake URI for testing. When called with
-  HTTP-REQUEST, returns the provided values.")
+  (:documentation "A fake URI for testing. It contains all of the
+  information that would be returned from a request.")
   (:default-initargs
    :body nil
    :status-code 200
