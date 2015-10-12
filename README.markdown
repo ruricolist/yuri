@@ -37,6 +37,7 @@ You parse a URI using `yuri:uri`:
     (yuri:uri->string invalid)
     => "http://example.com?á"
 
+[PURI]: http://quickdocs.org/puri/
 [TBRSS]: https://tbrss.com
 [QURI]: https://github.com/fukamachi/quri
 [algebraic data type]: https://bitbucket.org/tarballs_are_good/cl-algebraic-data-type
