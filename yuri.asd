@@ -1,7 +1,7 @@
 ;;;; yuri.asd
 
 (asdf:defsystem #:yuri
-  :description "Defused URI parsing."
+  :description "Defused URIs."
   :author "Paul M. Rodriguez <pmr@ruricolist.com>"
   :license "MIT"
   :depends-on (#:alexandria
