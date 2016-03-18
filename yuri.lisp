@@ -471,19 +471,6 @@
          (compare-queries)
          (compare-fragments))))
 
-(defun uri<= (uri1 uri2)
-  "Is URI1 included in URI2?
-
-To put it another way: if you merged URI2 and URI1, would URI1 be changed?"
-  (or (uri= uri1 uri2)
-      (match-uri uri1
-        ((or null-uri invalid-uri fake-uri data-uri) t)
-        ((valid-uri quri1)
-         (match-uri uri2
-           ((or null-uri invalid-uri fake-uri data-uri) nil)
-           ((valid-uri quri2)
-            (quri-uri<= quri1 quri2)))))))
-
 ;;; The arity-1 version would be pointless.
 (macrolet ((compiler-macro/2 (fn)
              `(define-compiler-macro ,fn (&whole decline &environment env
@@ -496,6 +483,19 @@ To put it another way: if you merged URI2 and URI1, would URI1 be changed?"
   (compiler-macro/2 uri=)
   (compiler-macro/2 merge-uris)
   (compiler-macro/2 uri<=))
+
+(defun uri<= (uri1 uri2)
+  "Is URI1 included in URI2?
+
+To put it another way: if you merged URI2 and URI1, would URI1 be changed?"
+  (or (uri= uri1 uri2)
+      (match-uri uri1
+        ((or null-uri invalid-uri fake-uri data-uri) t)
+        ((valid-uri quri1)
+         (match-uri uri2
+           ((or null-uri invalid-uri fake-uri data-uri) nil)
+           ((valid-uri quri2)
+            (quri-uri<= quri1 quri2)))))))
 
 (defun uri-fragment (uri)
   (match-uri uri
