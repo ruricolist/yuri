@@ -13,6 +13,7 @@
                #:quri
                #:fset
                #:cl-tld)
+  :version "2.0.0"
   :in-order-to ((asdf:test-op (asdf:test-op #:yuri/test)))
   :components ((:file "package")
                (:file "yuri" :depends-on ("package"))))
