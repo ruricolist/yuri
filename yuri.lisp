@@ -47,17 +47,56 @@
     (if error (funcall error)
         (values body status-code headers final-location))))
 
-(adt:defdata uri
+(fset:define-cross-type-compare-methods fake-response)
+
+(defmethod fset:compare ((x fake-response) (y fake-response))
+  (fset:compare-slots x y
+                      'body
+                      'status-code
+                      'headers
+                      'final-location))
+
+(defunion uri
   null-uri
-  (valid-uri quri:uri)
-  (invalid-uri string invalid-uri-error)
-  (fake-uri fake-response)
-  (data-uri string))
+  (valid-uri
+   (uri quri:uri))
+  (invalid-uri
+   (string string)
+   (error invalid-uri-error))
+  (fake-uri
+   (response fake-response))
+  (data-uri
+   (data string)))
+
+(fset:define-cross-type-compare-methods null-uri)
+
+(defmethod fset:compare ((x null-uri) (y null-uri))
+  :equal)
+
+(fset:define-cross-type-compare-methods valid-uri)
+
+(defmethod fset:compare ((x valid-uri) (y valid-uri))
+  (fset:compare-slots x y #'valid-uri-uri))
+
+(fset:define-cross-type-compare-methods invalid-uri)
+
+(defmethod fset:compare ((x invalid-uri) (y invalid-uri))
+  (fset:compare-slots x y #'invalid-uri-string))
+
+(fset:define-cross-type-compare-methods fake-uri)
+
+(defmethod fset:compare ((x fake-uri) (y fake-uri))
+  (fset:compare-slots x y #'fake-uri-response))
+
+(fset:define-cross-type-compare-methods data-uri)
+
+(defmethod fset:compare ((x data-uri) (y data-uri))
+  (fset:compare-slots x y #'data-uri-data))
 
 (defmacro match-uri (x &body body)
   ;; Ideally we would stack-allocate the URI if we were constructing a
   ;; new one.
-  `(adt:match uri (parse-uri ,x)
+  `(match-of uri (parse-uri ,x)
      ;; Handle (or ...) clauses.
      ,@(loop for (match . body) in body
              if (and (listp match)
@@ -69,19 +108,24 @@
 (defun make-fake-uri (&rest args)
   (fake-uri (apply #'make 'fake-response args)))
 
-(defmethod print-object :around ((self uri) stream)
+(defmethod print-object :around ((self null-uri) stream)
   (if *print-escape* (call-next-method)
-      (adt:match uri self
-        (null-uri
-         (write-string null-uri-string stream))
-        (fake-uri
-         (call-next-method))
-        ((valid-uri quri)
-         (quri:render-uri quri stream))
-        ((invalid-uri string _)
-         (write-string string stream))
-        ((data-uri string)
-         (write-string string stream)))))
+      (write-string null-uri-string stream)))
+
+(defmethod print-object :around ((self valid-uri) stream)
+  (if *print-escape* (call-next-method)
+      (let ((quri (valid-uri-uri self)))
+        (quri:render-uri quri stream))))
+
+(defmethod print-object :around ((self invalid-uri) stream)
+  (if *print-escape* (call-next-method)
+      (let ((string (invalid-uri-string self)))
+        (write-string string stream))))
+
+(defmethod print-object :around ((self data-uri) stream)
+  (if *print-escape* (call-next-method)
+      (let ((data (data-uri-data self)))
+        (write-string data stream))))
 
 (defmethod parse-uri ((uri fake-response))
   (fake-uri uri))
@@ -89,8 +133,10 @@
 (defmethod parse-uri ((uri null))
   null-uri)
 
-(defmethod parse-uri ((uri uri))
-  uri)
+(defmethod parse-uri ((uri t))
+  (if (typep uri 'uri)
+      uri
+      (call-next-method)))
 
 (defmethod parse-uri ((quri quri:uri))
   (valid-uri quri))
@@ -532,10 +578,6 @@ To put it another way: if you merged URI2 and URI1, would URI1 be changed?"
                                  (quri:uri (concat path "/"))
                                  quri))))))))
       (_ uri))))
-
-(defmethod fset:compare ((x uri) (y uri))
-  (fset:compare-lexicographically (uri->string x)
-                                  (uri->string y)))
 
 (defun extract-tld (uri)
   ;; No extra consing!
