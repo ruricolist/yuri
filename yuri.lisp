@@ -47,8 +47,6 @@
     (if error (funcall error)
         (values body status-code headers final-location))))
 
-(fset:define-cross-type-compare-methods fake-response)
-
 (defmethod fset:compare ((x fake-response) (y fake-response))
   (fset:compare-slots x y
                       'body
@@ -68,27 +66,17 @@
   (data-uri
    (data string)))
 
-(fset:define-cross-type-compare-methods null-uri)
-
 (defmethod fset:compare ((x null-uri) (y null-uri))
   :equal)
-
-(fset:define-cross-type-compare-methods valid-uri)
 
 (defmethod fset:compare ((x valid-uri) (y valid-uri))
   (fset:compare-slots x y #'valid-uri-uri))
 
-(fset:define-cross-type-compare-methods invalid-uri)
-
 (defmethod fset:compare ((x invalid-uri) (y invalid-uri))
   (fset:compare-slots x y #'invalid-uri-string))
 
-(fset:define-cross-type-compare-methods fake-uri)
-
 (defmethod fset:compare ((x fake-uri) (y fake-uri))
   (fset:compare-slots x y #'fake-uri-response))
-
-(fset:define-cross-type-compare-methods data-uri)
 
 (defmethod fset:compare ((x data-uri) (y data-uri))
   (fset:compare-slots x y #'data-uri-data))
